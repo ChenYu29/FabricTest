@@ -8,7 +8,7 @@ import { Row, Col, Layout, Avatar, Space, Dropdown, Menu } from 'antd';
 import { PoweroffOutlined, UserOutlined } from '@ant-design/icons';
 import './index.less';
 import { useHistory } from 'react-router-dom';
-import { platform } from '@utils/ProjectVars';
+import { menuList } from '../../index';
 
 const { Header } = Layout;
 
@@ -20,7 +20,7 @@ const HomeHeader = () => {
   };
   // 点击菜单
   const menuClick = (current: any) => {
-    history.push(platform + current.key);
+    history.push(current.key);
   };
   return (
     <>
@@ -28,15 +28,11 @@ const HomeHeader = () => {
         <Row justify="end">
           <Dropdown overlay={
             <Menu onClick={menuClick}>
-              <Menu.Item key="img">
-                <a>加载图片</a>
-              </Menu.Item>
-              <Menu.Item key="mark">
-                <a>标注</a>
-              </Menu.Item>
-              <Menu.Item key="editPoly">
-                <a>拖拽编辑多边形</a>
-              </Menu.Item>
+              {menuList.map((item: any) => (
+                <Menu.Item key={item.path}>
+                  <a>{item.name}</a>
+                </Menu.Item>
+              ))}
             </Menu>
           }>
             <a>示例</a>

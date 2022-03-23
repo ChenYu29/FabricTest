@@ -5,7 +5,7 @@
  **/
 import React, { useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 
 let canvas;
 const EditPolygon = () => {
@@ -28,6 +28,10 @@ const EditPolygon = () => {
   }, []);
   const Edit = () => {
     let poly = canvas.getActiveObject();
+    if (!poly) {
+      message.error('请选择一个多边形进行编辑');
+      return;
+    }
     canvas.setActiveObject(poly);
     poly.objectCaching = false; // 当`true`时，对象被缓存到一个额外的画布上。当' false '时，除非必要，否则对象不会被缓存(clipPath)默认为true
     poly.transparentCorners = false; // 当为真时，对象的控制角内部呈现为透明(即笔画而不是填充)

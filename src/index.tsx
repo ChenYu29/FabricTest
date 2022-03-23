@@ -9,18 +9,24 @@ import Home from 'views/home/Home';
 import OptImg from './views/img/OptImg';
 import FabricMarkUse from './views/mark/FabricMarkUse';
 import EditPolygon from './views/mark/EditPolygon';
-
-const platform = '/';
+import AddPolyByClick from './views/mark/AddPolyByClick';
+import { platform } from '@utils/ProjectVars';
+export const menuList = [
+  { path: platform, name: '', component: EditPolygon },
+  { path: platform + 'img', name: '加载图片', component: OptImg },
+  { path: platform + 'mark', name: '添加框', component: FabricMarkUse },
+  { path: platform + 'editPoly', name: '编辑多边形', component: EditPolygon },
+  { path: platform + 'addPolyByClick', name: '鼠标点击绘制多边形', component: AddPolyByClick },
+];
 const App = () => {
   return (
     <Router>
       <Switch>
         <Home>
           <Switch>
-            <Route exact path={platform} component={EditPolygon} />
-            <Route exact path={platform + 'img'} component={OptImg} />
-            <Route exact path={platform + 'mark'} component={FabricMarkUse} />
-            <Route exact path={platform + 'editPoly'} component={EditPolygon} />
+            {menuList.map((item: any, index: number) => (
+              <Route key={index} exact path={item.path} render={(props: any) => <item.component {...props} />} />
+            ))}
           </Switch>
         </Home>
       </Switch>
