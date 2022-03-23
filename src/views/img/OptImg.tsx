@@ -22,10 +22,10 @@ const OptImg = () => {
   const [drawType, setDrawType] = useState<IDrawType>(IDrawType.null);
   const [canAddFlag, setCanAddFlag] = useState(false);
   let mouseFrom = { x: 0, y: 0 }; // 画笔初始位置
-  let mouseTo = { x: 0,  y: 0}; // 画笔终止位置
+  let mouseTo = { x: 0, y: 0 }; // 画笔终止位置
   let isDown: boolean = false; // 鼠标落下
   // 定义变量记录最后一次的偏移量和缩放比例
-  let relationship = {x: 0, y: 0, zoom: 1};
+  let relationship = { x: 0, y: 0, zoom: 1 };
   useEffect(() => {
     let testCanvas = new fabric.Canvas('canvas', {
       // backgroundImage: test,
@@ -37,7 +37,7 @@ const OptImg = () => {
     fabric.Image.fromURL(test, (oImg) => {
       oImg.set('scaleX', testCanvas.width / oImg.width).set('scaleY', testCanvas.height / oImg.height).set('selectable', false).set('evented', false);
       testCanvas.add(oImg);
-    })
+    });
     setCanvas(testCanvas);
   }, []);
   useEffect(() => {
@@ -48,7 +48,7 @@ const OptImg = () => {
         canvas.__eventListeners['mouse:up'] = [];
       }
       canvas.on('mouse:down', (o: any) => {
-        if(canvas.getActiveObject()){ //避免点击移动时创建新的框
+        if (canvas.getActiveObject()) { // 避免点击移动时创建新的框
           return false;
         }
         isDown = true;
@@ -60,8 +60,8 @@ const OptImg = () => {
           mouseFrom.x = x;
           mouseFrom.y = y;
           // 计算矩形长宽
-          let left = getTransformedPosX(o.pointer.x  / relationship.zoom - relationship.x);
-          let top = getTransformedPosY(o.pointer.y  / relationship.zoom - relationship.y);
+          let left = getTransformedPosX(o.pointer.x / relationship.zoom - relationship.x);
+          let top = getTransformedPosY(o.pointer.y / relationship.zoom - relationship.y);
 
           let drawObj = null;
           if (drawType === IDrawType.rect) {
@@ -103,26 +103,26 @@ const OptImg = () => {
         } else if (drawType === IDrawType.move) {
           let delta = new fabric.Point(o.e.movementX, o.e.movementY);
           canvas.relativePan(delta);
-          //累计每一次移动时候的偏移量
+          // 累计每一次移动时候的偏移量
           relationship.x += o.e.movementX / relationship.zoom;
           relationship.y += o.e.movementY / relationship.zoom;
-          console.log('o.e.movementX', relationship.x)
+          console.log('o.e.movementX', relationship.x);
         } else if (drawType === IDrawType.rect || drawType === IDrawType.round) {
           let offsetX = canvas.calcOffset().viewportTransform[4];
           let offsetY = canvas.calcOffset().viewportTransform[5];
           // 记录当前鼠标移动终点坐标 (减去画布在 x y轴的偏移，因为画布左上角坐标不一定在浏览器的窗口左上角)
-          mouseTo.x = Math.round(o.e.offsetX - offsetX)
-          mouseTo.y = Math.round(o.e.offsetY - offsetY)
+          mouseTo.x = Math.round(o.e.offsetX - offsetX);
+          mouseTo.y = Math.round(o.e.offsetY - offsetY);
           let zoom = canvas.getZoom();
           let width = Math.abs(mouseTo.x - mouseFrom.x) / zoom;
           let height = Math.abs(mouseTo.y - mouseFrom.y) / zoom;
           let square = canvas.getActiveObject();
           // 左上角为起点
           if (mouseFrom.x > mouseTo.x) { // 以x轴方向：向起始点左边拖动
-            square.set('left', Math.abs(mouseTo.x) / zoom)
+            square.set('left', Math.abs(mouseTo.x) / zoom);
           }
           if (mouseFrom.y > mouseTo.y) { // 以y轴方向：向起始点上面拖动
-            square.set('top', Math.abs(mouseTo.y) / zoom)
+            square.set('top', Math.abs(mouseTo.y) / zoom);
           }
           if (drawType === IDrawType.rect) {
             square.set('width', width).set('height', height);
@@ -145,11 +145,11 @@ const OptImg = () => {
   }, [canvas, drawType]);
   // 因为画布会进行移动或缩放，所以鼠标在画布上的坐标需要进行相应的处理才是相对于画布的可用坐标
   const getTransformedPosX = (x: number) => {
-    let zoom = Number(canvas.getZoom())
+    let zoom = Number(canvas.getZoom());
     return (x - canvas.viewportTransform[4]) / zoom;
   };
   const getTransformedPosY = (y: number) => {
-    let zoom = Number(canvas.getZoom())
+    let zoom = Number(canvas.getZoom());
     return (y - canvas.viewportTransform[5]) / zoom;
   };
   const changeZoom = (type: IZoomType) => { // 放大和缩小
@@ -158,7 +158,7 @@ const OptImg = () => {
     if (type === IZoomType.big) {
       nowZoom += 0.1;
     } else {
-      nowZoom -= 0.1
+      nowZoom -= 0.1;
     }
     canvas.setZoom(nowZoom);
     relationship.zoom = nowZoom;
@@ -167,12 +167,12 @@ const OptImg = () => {
     setDrawType(type);
   };
   const deleteObj = () => {
-    canvas.getActiveObjects().forEach((obj) => {//循环删除多个
+    canvas.getActiveObjects().forEach((obj) => { // 循环删除多个
       canvas.remove(obj);
     });
     canvas.discardActiveObject(); // 避免选中多个一起删除后会有遗留的选中框没有删除
     canvas.renderAll();
-  }
+  };
   const onWheel = (e: any) => {};
 
   return (

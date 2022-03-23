@@ -18,12 +18,12 @@ interface IProps {
 const Home = (props: IProps) => {
   const { children } = props;
   return (
-    <Row style={{ width: '100%', height: '100vh', backgroundColor: '#f4f4f4' }}>
+    <Layout>
       <HomeHeader />
-      <Content style={{ width: '100%', margin: '80px 100px', backgroundColor: '#fff' }}>
+      <Content className="content">
         {children}
       </Content>
-    </Row>
+    </Layout>
   );
 };
 

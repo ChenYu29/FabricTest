@@ -14,25 +14,34 @@
  **/
 // path 需精确到文件路径
 module.exports = (mode) => {
+  let config = {
+    platform: '/',
+    serverPath: '/api/'
+  };
+  // 测试环境配置
   if (mode === 'test') {
-    return {
+    config = {
       hostType: 'windows',
       host: '47.118.60.93',
       user: 'administrator',
       password: 'meehoo2012!',
-      path: 'C:/guoxin_test/pro/dist.zip',
+      path: 'C:/scmp/scmp_js/dist.zip',
       shPath: '/opt/sh',
-      command: 'C:/guoxin_test/pro/deploy.bat'
+      command: 'C:/scmp/jsDeploy.bat',
+      ...config
     };
   } else {
-    return {
+    // 正式环境配置
+    config = {
       hostType: 'windows',
-      host: '47.108.139.51',
-      user: 'administrator',
-      password: 'Meehoo2012',
-      path: 'C:/projectConsultation_js/user/dist.zip',
+      host: '127.0.0.1',
+      user: 'admin',
+      password: '123456',
+      path: 'D:/opt/view/dist.zip',
       shPath: '/opt/sh',
-      command: 'C:/projectConsultation_js/user/deploy.bat'
+      command: 'D:/opt/sh/deploy.bat',
+      ...config
     };
   }
+  return config;
 };

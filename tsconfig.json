@@ -28,13 +28,17 @@
     "paths": {
       "@components/*": ["component/*"],
       "@views/*": ["view/*"],
-      "@utils/*": ["util/*"],
+      "@utils/*": ["utils/*"],
       "@static/*": ["static/*"]
     },
     // 加上这两个lib，就可以使用 ts 书写基于协程的同步代码，使用 async 和 await 关键字，并且支持输出为 es5
     "lib": [
       "dom",
       "es2015"
+    ],
+    // 图片引入配置
+    "include": [
+      "./__config__/images.d.ts"
     ]
   }
 }
