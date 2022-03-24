@@ -5,11 +5,11 @@
  **/
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Input, message, Row, Slider, Space, Spin, Tooltip, Tag } from 'antd';
-import { StarOutlined, BorderOutlined, CloseCircleOutlined, HighlightOutlined, BorderInnerOutlined } from '@ant-design/icons';
+import { StarOutlined, BorderOutlined, CloseCircleOutlined, HighlightOutlined, BorderInnerOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import { canvasMarkKey, CommonSpace, handleMarkColor, helpMarkKey } from '@utils/CommonVars';
 import { fabric } from 'fabric';
 import { IconFont, debounce, getDivis } from '@utils/CommonFunc';
-import { Control } from 'fabric/fabric-impl';
+import { addPolyByMouseFunc } from './AddPolyByClickFunc';
 
 enum IDrawType {
     rect = 'rect', // 矩形
@@ -19,7 +19,9 @@ enum IDrawType {
     helpMark = '辅助标注',
     move = 'move', // 移动
     helpAdd = '正负修正',
-    polyEdit = '编辑多边形'
+    polyEdit = '编辑多边形',
+    arrow = '箭头',
+  mousePoly = '鼠标按点绘制多边形'
 }
 let drawType: IDrawType = IDrawType.move;
 let isDown = false; // 鼠标点击
@@ -95,6 +97,7 @@ const FabricMark = (props: IProps) => {
   const [imgLoading, setImgLoading] = useState<boolean>(false); // 切换图片时加载的loading
   const [freshFlag, setFreshFlag] = useState<number>(0);
   const [helpPointList, setHelpPointList] = useState<Array<any>>([]);
+  const { mouseDBlclick, mouseDown, mouseMove } = addPolyByMouseFunc();
   useEffect(() => {
     // 防止右键点击下载展示图片
     document.oncontextmenu = new Function('event.returnValue=false');
@@ -124,6 +127,7 @@ const FabricMark = (props: IProps) => {
     canvas.absolutePan({ x: 0, y: 0 });
     canvas.renderAll();
   };
+  // 加载图片，并按当前画布大小缩放图片，加载之前画布上的标注框
   useEffect(() => {
     if (contentRef && currentFile) {
       setImgLoading(true);
@@ -235,12 +239,14 @@ const FabricMark = (props: IProps) => {
       });
     }
   }, [currentFile]);
+  // 刷新时清空并绑定事件
   useEffect(() => {
     if (freshFlag) {
       bindEvents();
     }
   }, [freshFlag]);
-  useEffect(() => { // 切换操作时，设置画布光标
+  // 切换操作时，设置画布光标
+  useEffect(() => {
     if (canvas) {
       if (activeDrawType === IDrawType.helpMark || activeDrawType === IDrawType.helpAdd) {
         canvas.defaultCursor = 'crosshair'; // 默认光标改成十字
@@ -287,10 +293,12 @@ const FabricMark = (props: IProps) => {
       canvas.__eventListeners['mouse:down'] = [];
       canvas.__eventListeners['mouse:move'] = [];
       canvas.__eventListeners['mouse:up'] = [];
+      canvas.__eventListeners['mouse:dblclick'] = [];
     }
     onMouseDown();
     onMouseMove();
     onMouseUp();
+    onMouseDBClick();
     onObjectSelection(); // 元素选中事件
   };
   const onMouseDown = () => {
@@ -309,31 +317,46 @@ const FabricMark = (props: IProps) => {
       const y: number = Math.round(o.e.offsetY - offsetY);
       mouseFrom.x = x;
       mouseFrom.y = y;
+      if (drawType === IDrawType.mousePoly) {
+        mouseDown(mouseFrom, canvas, pencilColor, pencilWidth);
+      }
     });
   };
   const onMouseMove = () => {
     canvas.on('mouse:move', (o: any) => {
       if (!isDown) return;
+      let offsetX = canvas.calcOffset().viewportTransform[4];
+      let offsetY = canvas.calcOffset().viewportTransform[5];
+      const x = Math.round(o.e.offsetX - offsetX);
+      const y = Math.round(o.e.offsetY - offsetY);
+      mouseTo.x = x;
+      mouseTo.y = y;
       if (drawType === IDrawType.move) {
         let delta = new fabric.Point(o.e.movementX, o.e.movementY);
         canvas.relativePan(delta);
-      } else if (drawType === IDrawType.polyEdit) {
-
-      } else {
+      } else if (drawType === IDrawType.mousePoly) {
+        mouseMove(mouseTo);
+      } else if (drawType !== IDrawType.polyEdit) {
         if (onDrawMouseMove && !onDrawMouseMove()) return; // 若有mouseMove的事件，且返回为false，则不继续执行画框操作
-        let offsetX = canvas.calcOffset().viewportTransform[4];
-        let offsetY = canvas.calcOffset().viewportTransform[5];
-        const x = Math.round(o.e.offsetX - offsetX);
-        const y = Math.round(o.e.offsetY - offsetY);
-        mouseTo.x = x;
-        mouseTo.y = y;
         drawMark(x, y);
+      }
+    });
+  };
+  const onMouseDBClick = () => {
+    canvas.on('mouse:dblclick', () => {
+      if (drawType === IDrawType.mousePoly) { // 双击时若操作项是鼠标按点绘制多边形则使用
+        mouseDBlclick();
+        // 设置为false，绘制结束标识
+        isDown = false;
       }
     });
   };
   const onMouseUp = () => {
     canvas.on('mouse:up', (o: any) => {
-      isDown = false;
+      // 若是当前操作项不是“鼠标按点绘制多边形”，则在up时将isDown设置为false作为绘制结束点标识
+      if (drawType !== IDrawType.mousePoly) {
+        isDown = false;
+      }
       let offsetX = canvas.calcOffset().viewportTransform[4];
       let offsetY = canvas.calcOffset().viewportTransform[5];
       mouseTo.x = Math.round(o.e.offsetX - offsetX);
@@ -361,7 +384,6 @@ const FabricMark = (props: IProps) => {
           setHelpPointList([...helpPoint]);
           canvas.add(pointItem);
           if (canHelpDraw && helpMarkEnd) {
-            console.log('currCanvasObject', currCanvasObject);
             if (currCanvasObject && currCanvasObject[canvasMarkKey]) {
               let point = currCanvasObject.points.map((item: any) => ([item.x / bgScale, item.y / bgScale]));
               helpMarkEnd(helpPoint, true, JSON.stringify(point));
@@ -471,6 +493,47 @@ const FabricMark = (props: IProps) => {
           fill: 'rgba(255, 255, 255, 0)',
         });
         break;
+      case IDrawType.arrow: {
+        /**
+         * 箭头的话，是通过绘制路径Path来实现，Fabric.js中的Path包括一系列的命令，这基本上模仿一个笔从一个点到另一个。
+         * 在“移动”，“线”，“曲线”，或“弧”等命令的帮助下，路径可以形成令人难以置信的复杂形状。同组的路径（路径组的帮助），开放更多的可能性，基本的为：
+         “M” 代表 “move” 命令, 告诉笔到 0, 0 点
+         “L” 代表 “line” 画一条0, 0 到 200, 100 的线
+         'Z' 代表闭合路径
+         */
+        let x1 = mouseFrom.x;
+        let x2 = mouseTo.x;
+        let y1 = mouseFrom.y;
+        let y2 = mouseTo.y;
+        let w = (x2 - x1);
+        let h = (y2 - y1);
+        let sh = Math.cos(Math.PI / 4) * 16;
+        let sin = h / Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2));
+        let cos = w / Math.sqrt(Math.pow(w, 2) + Math.pow(h, 2));
+        let w1 = ((16 * sin) / 4);
+        let h1 = ((16 * cos) / 4);
+        let centerx = sh * cos;
+        let centery = sh * sin;
+        /**
+         * centerx,centery 表示起始点，终点连线与箭头尖端等边三角形交点相对x，y
+         * w1 ，h1用于确定四个点
+         */
+        let path = ' M ' + x1 + ' ' + (y1);
+        path += ' L ' + (x2 - centerx + w1) + ' ' + (y2 - centery - h1);
+        path += ' L ' + (x2 - centerx + w1 * 2) + ' ' + (y2 - centery - h1 * 2);
+        path += ' L ' + (x2) + ' ' + y2;
+        path += ' L ' + (x2 - centerx - w1 * 2) + ' ' + (y2 - centery + h1 * 2);
+        path += ' L ' + (x2 - centerx - w1) + ' ' + (y2 - centery + h1);
+        path += ' Z';
+        canvasObject = new fabric.Path(
+          path,
+          {
+            stroke: pencilColor,
+            fill: pencilColor,
+            strokeWidth: pencilWidth
+          }
+        );
+      } break;
       case IDrawType.polygon:
         lineList.push({
           x: offsetX / zoom,
@@ -566,7 +629,8 @@ const FabricMark = (props: IProps) => {
       toUpdateMark(currCanvasObject, true); // 打开新增编辑表单
     }
   };
-  const deleteAllPoint = () => { // 删除所有的辅助点
+  // 删除所有的辅助点
+  const deleteAllPoint = () => {
     let activeObjects: Array<any> = [];
     const fabricCanvasObjectList = canvas.getObjects();
     for (let object of fabricCanvasObjectList) {
@@ -581,7 +645,8 @@ const FabricMark = (props: IProps) => {
     helpPoint = [];
     setHelpPointList([]);
   };
-  const deleteHelpPointItem = (key: string) => { // 删除某一个辅助点
+  // 删除某一个辅助点
+  const deleteHelpPointItem = (key: string) => {
     let deleteItem = getMarkObject(key);
     if (deleteItem) {
       let index = helpPoint.findIndex((item: any) => item.key === key);
@@ -592,7 +657,8 @@ const FabricMark = (props: IProps) => {
       canvas.remove(deleteItem);
     }
   };
-  const getMarkObject = (key: any) => { // 获取标注实体
+  // 获取标注实体
+  const getMarkObject = (key: any) => {
     let activeObjects;
     const fabricCanvasObjectList = canvas.getObjects();
     for (let object of fabricCanvasObjectList) {
@@ -615,6 +681,8 @@ const FabricMark = (props: IProps) => {
                 <Button type={btnType(IDrawType.rect)} onClick={() => setDrawType(IDrawType.rect)} size="small" icon={<BorderOutlined />}>矩形</Button>
                 <Button type={btnType(IDrawType.round)} onClick={() => setDrawType(IDrawType.round)} size="small" icon={<IconFont type="icon-yuanxing" />}>圆形</Button>
                 <Button type={btnType(IDrawType.polygon)} onClick={() => setDrawType(IDrawType.polygon)} size="small" icon={<StarOutlined />}>多边形</Button>
+                <Button type={btnType(IDrawType.mousePoly)} onClick={() => setDrawType(IDrawType.mousePoly)} size="small" icon={<StarOutlined />}>按点绘制多边形</Button>
+                <Button type={btnType(IDrawType.arrow)} onClick={() => setDrawType(IDrawType.arrow)} size="small" icon={<ArrowUpOutlined style={{ transform: 'rotate(45deg)' }} />}>箭头</Button>
                 <Button type={btnType(IDrawType.helpMark)} onClick={() => setDrawType(IDrawType.helpMark)} size="small" icon={<HighlightOutlined />}>辅助标注</Button>
                 <Button type={btnType(IDrawType.helpAdd)} onClick={() => setDrawType(IDrawType.helpAdd)} size="small" icon={<BorderInnerOutlined />}>正负修正</Button>
               </>
