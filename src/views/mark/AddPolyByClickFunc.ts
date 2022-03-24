@@ -1,5 +1,5 @@
 /**
- *@description
+ *@description 鼠标打点绘制多边形的方法
  *@author cy
  *@date 2022-03-24 09:50
  **/
@@ -67,7 +67,12 @@ export const addPolyByMouseFunc = () => {
       console.log('rrrrr', e);
       if (lines.length > 0) {
         console.log('lines', lines);
-        canvas.remove(lines[lines.length - 1]);
+        let current = lines[lines.length - 1];
+        lines[lines.length - 1].set({
+          x2: current.x,
+          y2: current.y
+        });
+        canvas.renderAll();
         lineCounter = lineCounter - 1;
         roofPoints.splice(roofPoints.length - 1, 1);
         canvas.renderAll();
