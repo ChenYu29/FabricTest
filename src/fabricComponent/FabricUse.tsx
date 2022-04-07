@@ -9,6 +9,7 @@ import test from '@static/img/test.jpg';
 import { Button, List, Spin } from 'antd';
 import { CheckCircleFilled, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { colors } from '@utils/CommonVars';
+import './myfabric.less';
 
 const imgStyle: React.CSSProperties = {
   height: 100,
@@ -35,51 +36,17 @@ const FabricUse = () => {
     ];
     setFileList(list);
   }, []);
-
-  const changePagination = (type: 'up' | 'down') => { // 向上翻页current -1 ，向下翻页 current + 1
-    let pageCurrent = type === 'up' ? (pagination.current - 1) : (pagination.current + 1);
-    setPagination({ ...pagination, current: pageCurrent });
-  };
-  const getListItemStyle = (item: any) => { // 获取图片列表的样式，当前选中的边框样式不同
-    const listItemStyle: React.CSSProperties = {
-      padding: 5,
-      marginBottom: 3,
-      marginTop: 3,
-      border: currentFile && item.id === currentFile.id ? '2px solid #08979C' : '1px solid #eee'
-    };
-    return listItemStyle;
-  };
   return (
     <>
       <FabricComponent
         markType="draw" currentFile={{ dataPath: test }}
         leftChildren={(
-          <div style={{ width: 200, overflowY: 'auto', height: 'calc(100vh - 100px)' }}>
+          <div className="fabric-list-content" style={{ width: 200, overflowY: 'auto', height: 'calc(100vh - 100px)' }}>
             {fileList.map((item: any) => (
-              <div key={item.id} style={{ display: 'flex', width: '100%', marginBottom: 10 }} className="fileList">
-                <img width={180} height={100} src={item.dataThumbnailPath} />
-                {/*<div style={{ background: '#fff url(' + item.dataThumbnailPath + ') no-repeat center / contain', ...imgStyle }}></div>*/}
-                {/*{item.status === 1 && <CheckCircleFilled style={{ color: colors.primaryColor, position: 'absolute' }} />}*/}
+              <div key={item.id} onClick={() => setCurrentFile(item)} className={item.status === 1 ? 'fabricImg-list fabricImg-list-done' : 'fabricImg-list'}>
+                <img width={180} height={100} src={item.dataThumbnailPath} className="fabric-img" />
               </div>
             ))}
-            {/*<Button type="primary" onClick={() => changePagination('up')} block icon={<UpOutlined />} disabled={pagination.current === 1}></Button>*/}
-            {/*<Spin spinning={loading}>*/}
-            {/*  <List*/}
-            {/*    itemLayout="vertical"*/}
-            {/*    size="large"*/}
-            {/*    split={false}*/}
-            {/*    dataSource={fileList}*/}
-            {/*    renderItem={item => (*/}
-            {/*      <List.Item style={getListItemStyle(item)} onClick={() => setCurrentFile(item)}>*/}
-            {/*        <div style={{ display: 'flex', width: '100%' }}>*/}
-            {/*          <div style={{ background: '#fff url(' + item.dataThumbnailPath + ') no-repeat center / contain', ...imgStyle }}></div>*/}
-            {/*          /!*{item.status === WhetherFlag.yes && <CheckCircleFilled style={{ color: colors.primaryColor, position: 'absolute' }} />}*!/*/}
-            {/*        </div>*/}
-            {/*      </List.Item>*/}
-            {/*    )}*/}
-            {/*  />*/}
-            {/*</Spin>*/}
-            {/*<Button type="primary" onClick={() => changePagination('down')} block icon={<DownOutlined />} disabled={pagination.current * pagination.pageSize >= pagination.total}></Button>*/}
           </div>
         )}
       />
