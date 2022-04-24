@@ -81,7 +81,7 @@ const FabricCanvas = (props: IProps) => {
   const contentRef: any = useRef();
   useEffect(() => {
     // 防止右键点击下载展示图片
-    document.oncontextmenu = new Function('event.returnValue=false');
+    // document.oncontextmenu = new Function('event.returnValue=false');
     if (canvas) {
       const backFunc = debounce(resizeCanvas, 100);
       window.addEventListener('resize', backFunc);
@@ -121,7 +121,6 @@ const FabricCanvas = (props: IProps) => {
     pencilWidth = 2;
   };
   const resizeCanvas = () => {
-    console.log('改变了', contentRef.current.clientWidth);
     canvas.setWidth(contentRef.current.clientWidth);
     canvas.absolutePan({ x: 0, y: 0 });
     canvas.renderAll();
@@ -256,6 +255,7 @@ const FabricCanvas = (props: IProps) => {
     onMouseUp();
     onMouseDBClick();
     onObjectSelection(); // 元素选中事件
+    addPolyClick.mouseRightClick();
   };
   const onMouseDown = () => {
     canvas.on('mouse:down', (o: any) => {
@@ -467,10 +467,9 @@ const FabricCanvas = (props: IProps) => {
       canvas.add(currCanvasObject);
     }
   };
-  console.log(' contentRef.current.clientHeight', contentRef.current && contentRef.current.clientWidth);
   return (
     <>
-      <div ref={contentRef} style={{ height: 'calc(100vh - 100px)', backgroundColor: '#eee' }} onWheel={onwheel}>
+      <div ref={contentRef} id="view" style={{ height: 'calc(100vh - 100px)', backgroundColor: '#eee' }} onWheel={onwheel}>
         <Spin spinning={imgLoading}>
           <div style={{ display: 'flex', width: '100%', height: '100%' }}>
             <canvas id="fabricCanvasMark" />

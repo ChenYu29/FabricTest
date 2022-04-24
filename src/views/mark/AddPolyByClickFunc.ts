@@ -62,26 +62,38 @@ export const addPolyByMouseFunc = () => {
       lineCounter = 0;
     }
   };
-  const mouseRightClick = (target: string) => {
+  const mouseRightClick = () => {
     document.getElementById('view').oncontextmenu = (e: any) => {
-      console.log('rrrrr', e);
-      if (lines.length > 0) {
-        console.log('lines', lines);
-        let current = lines[lines.length - 1];
-        lines[lines.length - 1].set({
-          x2: current.x,
-          y2: current.y
-        });
-        canvas.renderAll();
-        lineCounter = lineCounter - 1;
-        roofPoints.splice(roofPoints.length - 1, 1);
-        canvas.renderAll();
+      if (!canvas) {
+        e.preventDefault();
+        return false;
       }
+      let offsetX = canvas.calcOffset().viewportTransform[4];
+      let offsetY = canvas.calcOffset().viewportTransform[5];
+      const x = Math.round(e.offsetX - offsetX);
+      const y = Math.round(e.offsetY - offsetY);
+      cancelPreLine({ x, y });
       e.preventDefault();
       return false;
     };
   };
 
+  // 删除上一条线
+  const cancelPreLine = (mouseTo: { x: number, y: number }) => {
+    if (lines.length > 0 && lineCounter > 0) {
+      if (lineCounter > 1) {
+        lines[lineCounter - 2].set({
+          x2: mouseTo.x,
+          y2: mouseTo.y
+        });
+      }
+      canvas.remove(lines[lineCounter - 1]); // 在画布中删除上一条line
+      lines.splice(lineCounter - 1, 1); // 在lines数组中删除上一条
+      lineCounter = lineCounter - 1; // lines的条数减1
+      roofPoints.splice(roofPoints.length - 1, 1);
+      canvas.renderAll();
+    }
+  };
   const makeRoof = () => {
     let left = findLeftPaddingForRoof(roofPoints);
     let top = findTopPaddingForRoof(roofPoints);
