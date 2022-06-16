@@ -109,6 +109,38 @@ const FabricCanvas = (props: IProps) => {
     } else {
       currCanvasObject = null;
     }
+    // todo 有渲染问题，后期解决
+    // 添加选框事件和元素选中事件重叠，导致不能在元素内新建一个选框。将元素的evented置为 false
+    // if (canvas) {
+    //   let objs = canvas.getObjects();
+    //   if (objs) {
+    //     // 可以有选中事件的几个操作
+    //     const cancelLockActive = [IDrawType.cancelDO, IDrawType.dragCanvas, IDrawType.dragObj];
+    //     let lock = cancelLockActive.findIndex((item: any) => activeDrawType === item) > -1;
+    //     objs.forEach((item: any) => {
+    //       item.set('evented', lock).set('hasControls', lock); // 当在不可选中操作下，禁用操作事件。例如在编辑或者添加选框的情况，禁用事件
+    //       item.set('fill', 'rgba(0,0,0, 0)');
+    //       // 判断是否可拖拽元素，如果是moveMark，则可以拖拽，烦躁不能拖拽
+    //       let lockDrag = activeDrawType !== IDrawType.dragObj;
+    //       item.set('lockMovementX', lockDrag).set('lockMovementY', lockDrag).set('lockRotation', lockDrag).set('lockScalingX', lockDrag).set('lockScalingY', lockDrag);
+    //     });
+    //   }
+    //   canvas.renderAll();
+    // }
+    // isDown = false; // 设置isDown，避免切换到其他形状时直接进入mouseMove的方法
+    // // 若上一步操作是 polyEdit 编辑多边形，则取消多边形的编辑状态
+    // if (drawType === IDrawType.polyEdit) {
+    //   editPolyFuncObj.cancelEdit(canvas);
+    // }
+    // drawType = activeDrawType;
+    // if (activeDrawType === IDrawType.polyEdit) {
+    //   currCanvasObject = canvas.getActiveObject();
+    //   // 将选中的元素设置事件和控制点，因为上面在切换操作时在不可选中的操作下禁用了事件
+    //   currCanvasObject.set('evented', true).set('hasControls', true);
+    //   activeDrawType === IDrawType.polyEdit && editPolyFuncObj.editPoly(canvas, currCanvasObject);
+    // } else {
+    //   currCanvasObject = null;
+    // }
   }, [activeDrawType]);
   const initVar = () => { // 初始化全局变量，避免切换至其他地方使用时变量还保留上一次的值
     mouseFrom = { x: 0, y: 0 };
@@ -381,6 +413,7 @@ const FabricCanvas = (props: IProps) => {
             radius: radius,
             strokeWidth: pencilWidth,
             hasControls: true,
+            // evented: false
           });
         }
         break;
@@ -403,6 +436,8 @@ const FabricCanvas = (props: IProps) => {
           selectionBackgroundColor: 'rgba(100,100,100,0.25)',
           strokeWidth: pencilWidth,
           fill: 'rgba(255, 255, 255, 0)',
+          hasControls: true,
+          // evented: false
         });
         break;
       case IDrawType.arrow: {
@@ -442,7 +477,9 @@ const FabricCanvas = (props: IProps) => {
           {
             stroke: pencilColor,
             fill: pencilColor,
-            strokeWidth: pencilWidth
+            strokeWidth: pencilWidth,
+            hasControls: true,
+            // evented: false
           }
         );
       } break;
@@ -456,7 +493,9 @@ const FabricCanvas = (props: IProps) => {
           selectionBackgroundColor: 'rgba(100,100,100,0.25)',
           strokeWidth: pencilWidth,
           fill: 'rgba(255, 255, 255, 0)',
-          borderDashArray: [5]
+          borderDashArray: [5],
+          hasControls: true,
+          // evented: false
         });
         break;
       default:
