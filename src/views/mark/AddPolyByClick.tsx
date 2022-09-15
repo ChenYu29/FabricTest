@@ -4,10 +4,9 @@
  *@date 2022-03-23 16:15
  **/
 import React, { useEffect, useRef } from 'react';
-import { Button, Row, Space } from 'antd';
+import { Button, Modal, Space } from 'antd';
 import { fabric } from 'fabric';
-import { addPolyByMouseFunc } from './AddPolyByClickFunc';
-// import addPolyByMouseFunc from './AddPolyByClickFunc';
+import AddPolyByMouseFunc from './AddPolyByClickFunc';
 enum IDrawType {
   draw = '绘制',
   notDraw = '不绘制'
@@ -27,10 +26,11 @@ let drawType = IDrawType.notDraw;
 // };
 // let mouseFrom = { x: 0, y: 0 };
 
+let addFun = null;
+let isDown = false;
 const AddPolyByClick = () => {
   const contentRef: any = useRef();
   const canvasRef: any = useRef();
-  const { mouseDBlclick, mouseDown, mouseMove } = addPolyByMouseFunc();
   useEffect(() => {
     canvas = new fabric.Canvas('addPoly', {
       backgroundColor: 'rgba(253,230,248,0.28)',
@@ -38,8 +38,9 @@ const AddPolyByClick = () => {
       height: contentRef.current.clientHeight,
       selection: false, // 不会出现拖曳选择区块
       hoverCursor: 'default', // 鼠标移入元素时，设置指针样式未默认
-      stopContextMenu: true, // 防止右键点击出现系统菜单,根据需求需要鼠标右键事件，设置为false，不然在画布上的右击事件无
+      stopContextMenu: false, // 防止右键点击出现系统菜单,根据需求需要鼠标右键事件，设置为false，不然在画布上的右击事件无
     });
+    addFun = new AddPolyByMouseFunc();
     bindEvents();
   }, []);
   const bindEvents = () => {
@@ -53,6 +54,15 @@ const AddPolyByClick = () => {
     onMouseMove();
     onMouseUp();
     onDBClick();
+    document.getElementById('view').oncontextmenu = (e: any) => {
+      if (!canvas) {
+        e.preventDefault();
+        return false;
+      }
+      addFun.mouseRightClick(e);
+      e.preventDefault();
+      return false;
+    };
   };
   const onMouseDown = () => {
     canvas.on('mouse:down', (o: any) => {
@@ -61,24 +71,26 @@ const AddPolyByClick = () => {
         o.e.preventDefault();
         o.e.stopPropagation();
       }
+      isDown = true;
       canvas.selection = false;
       let offsetX = canvas.calcOffset().viewportTransform[4];
       let offsetY = canvas.calcOffset().viewportTransform[5];
       const x: number = Math.round(o.e.offsetX - offsetX);
       const y: number = Math.round(o.e.offsetY - offsetY);
       if (drawType === IDrawType.draw) {
-        mouseDown({ x, y }, canvas);
+        addFun.mouseDown({ x, y }, canvas);
       }
     });
   };
   const onMouseMove = () => {
     canvas.on('mouse:move', (o: any) => {
+      if (!isDown) return;
       let offsetX = canvas.calcOffset().viewportTransform[4];
       let offsetY = canvas.calcOffset().viewportTransform[5];
       const x = Math.round(o.e.offsetX - offsetX);
       const y = Math.round(o.e.offsetY - offsetY);
       if (drawType === IDrawType.draw) {
-        mouseMove({ x, y });
+        addFun.mouseMove({ x, y });
       }
     });
   };
@@ -88,9 +100,22 @@ const AddPolyByClick = () => {
   const onDBClick = () => {
     canvas.on('mouse:dblclick', (e: any) => {
       if (drawType === IDrawType.draw) {
-        mouseDBlclick();
+        let poly = addFun.mouseDBlclick();
+        isDown = false;
+        Modal.confirm({
+          title: '确认添加',
+          content: '可以取消接着绘制',
+          onCancel: () => {
+            isDown = true;
+            let points = poly.points;
+            canvas.remove(poly);
+            addFun.cancelPolyToLine(points, canvas);
+          }
+        });
       }
     });
+
+
   };
   const clearCanvas = () => {
     let objs = canvas.getObjects();
