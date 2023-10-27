@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import FabricComponent from './FabricComponent';
 import test from '@static/img/test.jpg';
+import color from '@static/img/color.png';
 import { Button, List, Spin } from 'antd';
 import { CheckCircleFilled, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { colors } from '@utils/CommonVars';
@@ -23,8 +24,8 @@ const FabricUse = () => {
   const [fileList, setFileList] = useState<Array<any>>([]);
   useEffect(() => {
     let list = [
+      { id: 'img-2', dataThumbnailPath: color, status: 0 },
       { id: 'img-1', dataThumbnailPath: test, status: 0 },
-      { id: 'img-2', dataThumbnailPath: test, status: 0 },
       { id: 'img-3', dataThumbnailPath: test, status: 1 },
       { id: 'img-4', dataThumbnailPath: test, status: 0 },
       { id: 'img-5', dataThumbnailPath: test, status: 1 },
@@ -39,7 +40,7 @@ const FabricUse = () => {
   return (
     <>
       <FabricComponent
-        markType="draw" currentFile={{ dataPath: test }}
+        markType="draw" currentFile={{ dataPath: currentFile?.dataThumbnailPath }}
         leftChildren={(
           <div className="fabric-list-content" style={{ width: 200, overflowY: 'auto', height: 'calc(100vh - 100px)' }}>
             {fileList.map((item: any) => (

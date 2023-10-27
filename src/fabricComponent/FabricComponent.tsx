@@ -8,6 +8,7 @@ import FabricToolBar from './FabricToolBar';
 import { Layout, message, Modal, Form, Input, Slider } from 'antd';
 import FabricCanvas, { useFabricMarkFresh } from './FabricCanvas';
 import { canvasMarkKey, helpMarkKey } from '@utils/CommonVars';
+import MiniMap from '../views/mark/MiniMap';
 const { Sider, Content } = Layout;
 
 export enum IDrawType {
@@ -123,7 +124,7 @@ const FabricComponent = (props: IProps) => {
       <Sider collapsed={true} style={{ width: 60, height: '100%' }}>
         <FabricToolBar onOptClick={onOptClick} activeKey={activeOpt} />
       </Sider>
-      <Content style={{ backgroundColor: '#ffc0cb38', height: 'calc(100vh - 100px)', width: 'calc(100vw - 300px)' }}>
+      <Content style={{ backgroundColor: '#ffc0cb38', position: 'relative', height: 'calc(100vh - 100px)', width: 'calc(100vw - 300px)' }}>
         <FabricCanvas
           setMarkCanvas={getMarkCanvas}
           activeDrawType={activeOpt}
@@ -137,6 +138,7 @@ const FabricComponent = (props: IProps) => {
           drawColor={pencilColor}
           drawWidth={pencilWidth}
         />
+        <MiniMap design={markCanvas} canvasFresh={canvasFresh} activeOpt={activeOpt} />
       </Content>
       {leftChildren}
       <Modal visible={settingView} title="设置" footer={false} onCancel={() => setSettingView(false)}>

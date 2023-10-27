@@ -142,7 +142,7 @@ const FabricMark = (props: IProps) => {
         setActiveDrawType(drawType);
       } else {
         testCanvas = new fabric.Canvas('fabricCanvasMark', {
-          backgroundColor: '#eee',
+          backgroundColor: '#ebb368',
           width: contentRef.current.clientWidth, // 设置和外面div的宽高一样
           height: contentRef.current.clientHeight,
           selection: false, // 不会出现拖曳选择区块
